@@ -19,7 +19,7 @@ class MiddlewareTest < Test::Unit::TestCase
   def setup
     @app = lambda { |env| [200, {'Content-Type' => 'text/plain', 'Content-Length' => '5'}, ["Hello"]] }
 
-    @request = Rack::MockRequest.new(Rack::Lint.new(Collage.new(@app, PATH)))
+    @request = Rack::MockRequest.new(Rack::Lint.new(Collage.new(@app, :path => PATH)))
 
     FileUtils.rm_f(File.join(PATH, Collage.filename))
   end
@@ -72,6 +72,12 @@ class MiddlewareTest < Test::Unit::TestCase
     stub(File).mtime { stamp }
 
     assert_equal stamp.httpdate, response.headers['Last-Modified']
+  end
+  
+  def test_allows_custom_patterns
+    @request = Rack::MockRequest.new(Rack::Lint.new(Collage.new(@app, :path => PATH, :files => ["o*.js"])))
+
+    assert_equal "// One\n\n\n", response.body
   end
 
   def test_does_not_include_the_collage

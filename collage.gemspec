@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'collage'
-  s.version = '0.1'
+  s.version = '0.1.1'
   s.summary = %{Rack middleware that packages your JS into a single file.}
   s.date = %q{2009-03-01}
   s.author = "Damian Janowski"

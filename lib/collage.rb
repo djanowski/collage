@@ -1,13 +1,14 @@
 class Collage
-  def initialize(app, path)
+  def initialize(app, options)
     @app = app
-    @path = File.expand_path(path)
+    @path = File.expand_path(options[:path])
+    @files = options[:files]
   end
 
   def call(env)
     return @app.call(env) unless env['PATH_INFO'] == "/#{Collage.filename}"
 
-    result = Packager.new(@path)
+    result = Packager.new(@path, @files)
 
     result.ignore(filename)
 
@@ -35,8 +36,9 @@ class Collage
   end
 
   class Packager
-    def initialize(path)
+    def initialize(path, patterns = nil)
       @path = path
+      @patterns = Array(patterns || "**/*.js")
     end
 
     def package
@@ -46,12 +48,10 @@ class Collage
       end
     end
 
-    def pattern
-      File.join(@path, '**', "*.js")
-    end
-
     def files
-      @files ||= Dir[pattern]
+      @files ||= @patterns.map do |pattern|
+        Dir[File.join(@path, pattern)]
+      end.flatten
     end
 
     def timestamp
