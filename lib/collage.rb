@@ -51,7 +51,7 @@ class Collage
     def files
       @files ||= @patterns.map do |pattern|
         Dir[File.join(@path, pattern)]
-      end.flatten
+      end.flatten.uniq
     end
 
     def timestamp

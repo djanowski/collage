@@ -80,6 +80,12 @@ class MiddlewareTest < Test::Unit::TestCase
     assert_equal "// One\n\n\n", response.body
   end
 
+  def test_does_not_include_files_twice
+    @request = Rack::MockRequest.new(Rack::Lint.new(Collage.new(@app, :path => PATH, :files => ["two.js", "o*.js", "two.js"])))
+
+    assert_equal "// Two\n\n\n// One\n\n\n", response.body
+  end
+
   def test_does_not_include_the_collage
     File.open(File.join(PATH, Collage.filename), 'w') {|f| f.write("Unified!") }
 
