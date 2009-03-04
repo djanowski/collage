@@ -14,7 +14,7 @@ class Collage
 
     File.open(filename, 'w') {|f| f.write(result) }
 
-    [200, {'Content-Type' => 'text/javascript', 'Content-Length' => result.size.to_s, 'Last-Modified' => result.mtime.httpdate}, result]
+    [200, {'Content-Type' => 'text/javascript', 'Content-Length' => result.size.to_s, 'Last-Modified' => File.mtime(filename).httpdate}, result]
   end
 
   def filename

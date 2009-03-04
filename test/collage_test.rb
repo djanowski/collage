@@ -67,11 +67,11 @@ class MiddlewareTest < Test::Unit::TestCase
   end
 
   def test_sets_last_modified_header
-    stamp = Time.now
+    stamp = Time.parse("Wed, 04 Mar 2009 12:57:45 GMT")
 
-    stub(File).mtime { stamp }
+    mock(File).mtime(File.join(PATH, "js.js")) { stamp }
 
-    assert_equal stamp.httpdate, response.headers['Last-Modified']
+    assert_equal "Wed, 04 Mar 2009 12:57:45 GMT", response.headers['Last-Modified']
   end
   
   def test_allows_custom_patterns
