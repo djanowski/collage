@@ -14,7 +14,7 @@ require File.dirname(__FILE__) + "/../lib/collage"
 class MiddlewareTest < Test::Unit::TestCase
   include RR::Adapters::TestUnit
   
-  PATH = File.dirname(__FILE__) + "/public"
+  PATH = File.expand_path(File.dirname(__FILE__) + "/public")
 
   def setup
     @app = lambda { |env| [200, {'Content-Type' => 'text/plain', 'Content-Length' => '5'}, ["Hello"]] }
