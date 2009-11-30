@@ -43,14 +43,18 @@ class Collage
 
     def package
       files.inject("") do |contents,file|
-        contents += File.read(file) + "\n\n"
+        contents += package_file(file) + "\n\n"
         contents
       end
     end
 
+    def package_file(file)
+      File.read(file)
+    end
+
     def files
       @files ||= @patterns.map do |pattern|
-        Dir[File.join(@path, pattern)]
+        File.exist?(pattern) ? pattern : Dir[File.join(@path, pattern)]
       end.flatten.uniq
     end
 
@@ -69,9 +73,9 @@ class Collage
     def result
       @result ||= package
     end
-    
+
     def each(&block)
-      result.each(&block)
+      result.each_line(&block)
     end
 
     def to_s
@@ -81,6 +85,14 @@ class Collage
     def ignore(file)
       if files.delete(file)
         @result = nil
+      end
+    end
+
+    class Sass < self
+      def package_file(file)
+        contents = File.read(file)
+
+        File.extname(file) == ".sass" ? ::Sass::Engine.new(contents).render : contents
       end
     end
   end

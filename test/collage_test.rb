@@ -1,21 +1,18 @@
-require 'rubygems'
+require "rack/mock"
+require "test/unit"
+require "fileutils"
+require "time"
+require "override"
 
-gem 'rack', '>= 0.9'
-gem 'rr', '>= 0.6'
-
-require 'rack/mock'
-require 'test/unit'
-require 'fileutils'
-require 'time'
-require 'rr'
+require "sass"
 
 require File.dirname(__FILE__) + "/../lib/collage"
 
-class MiddlewareTest < Test::Unit::TestCase
-  include RR::Adapters::TestUnit
-  
-  PATH = File.expand_path(File.dirname(__FILE__) + "/public")
+include Override
 
+PATH = File.expand_path(File.dirname(__FILE__) + "/public")
+
+class MiddlewareTest < Test::Unit::TestCase
   def setup
     @app = lambda { |env| [200, {'Content-Type' => 'text/plain', 'Content-Length' => '5'}, ["Hello"]] }
 
@@ -51,9 +48,9 @@ class MiddlewareTest < Test::Unit::TestCase
 
   def test_provides_a_timestamp
     stamp = Time.now
+    newer = File.join(PATH, "two.js")
 
-    stub(File).mtime(File.join(PATH, "two.js")) { stamp }
-    stub(File).mtime(anything) { stamp - 1 }
+    override(File, :mtime => lambda { |path| path == newer ? stamp : stamp - 1 })
 
     assert_equal stamp.to_i.to_s, Collage.timestamp(PATH)
   end
@@ -61,7 +58,7 @@ class MiddlewareTest < Test::Unit::TestCase
   def test_provides_html_tag
     stamp = Time.now
 
-    stub(File).mtime { stamp }
+    override(File, :mtime => stamp)
 
     assert_equal %{<script type="text/javascript" src="/js.js?#{stamp.to_i}"></script>}, Collage.html_tag(PATH)
   end
@@ -69,11 +66,11 @@ class MiddlewareTest < Test::Unit::TestCase
   def test_sets_last_modified_header
     stamp = Time.parse("Wed, 04 Mar 2009 12:57:45 GMT")
 
-    mock(File).mtime(File.join(PATH, "js.js")) { stamp }
+    override(File, :mtime => lambda { |path| stamp if path == File.join(PATH, "js.js") })
 
     assert_equal "Wed, 04 Mar 2009 12:57:45 GMT", response.headers['Last-Modified']
   end
-  
+
   def test_allows_custom_patterns
     @request = Rack::MockRequest.new(Rack::Lint.new(Collage.new(@app, :path => PATH, :files => ["o*.js"])))
 
@@ -90,5 +87,19 @@ class MiddlewareTest < Test::Unit::TestCase
     File.open(File.join(PATH, Collage.filename), 'w') {|f| f.write("Unified!") }
 
     assert_no_match /Unified!/, response.body
+  end
+end
+
+class SassPackagerTest < Test::Unit::TestCase
+  def test_packages_sass
+    output = Collage::Packager::Sass.new(PATH, ["one.sass"]).package
+
+    assert_equal "body {\n  font-size: 1em; }\n\n\n", output
+  end
+
+  def test_allows_css_too
+    output = Collage::Packager::Sass.new(PATH, ["one.sass", "two.css"]).package
+
+    assert_equal "body {\n  font-size: 1em; }\n\n\n/* Two */\n\n\n", output
   end
 end
