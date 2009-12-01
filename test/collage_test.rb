@@ -10,6 +10,8 @@ require File.dirname(__FILE__) + "/../lib/collage"
 
 include Override
 
+(class << File; self; end).send(:alias_method, :original_mtime, :mtime)
+
 PATH = File.expand_path(File.dirname(__FILE__) + "/public")
 
 class MiddlewareTest < Test::Unit::TestCase
@@ -87,6 +89,32 @@ class MiddlewareTest < Test::Unit::TestCase
     File.open(File.join(PATH, Collage.filename), 'w') {|f| f.write("Unified!") }
 
     assert_no_match /Unified!/, response.body
+  end
+end
+
+class SassPackagerTest < Test::Unit::TestCase
+  def setup
+    @path = File.join(PATH, "all.css")
+
+    FileUtils.rm_f(@path)
+  end
+
+  def test_writes_file
+    Collage::Packager::Sass.new(PATH, ["one.sass"]).write(@path)
+
+    assert_equal "body {\n  font-size: 1em; }\n\n\n", File.read(@path)
+  end
+
+  def test_keeps_correct_timestamp
+    stamp = Time.parse("2009-11-30 15:00:00 UTC")
+
+    override(File, :mtime => lambda { |path| stamp if path == File.join(PATH, "one.sass") })
+
+    Collage::Packager::Sass.new(PATH, ["one.sass"]).write(@path)
+
+    (class << File; self; end).send(:alias_method, :mtime, :original_mtime)
+
+    assert_equal stamp.to_i, File.mtime(@path).to_i
   end
 end
 

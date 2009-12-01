@@ -88,6 +88,14 @@ class Collage
       end
     end
 
+    def write(path)
+      File.open(path, "w") do |f|
+        f.write(result.to_s)
+      end
+
+      FileUtils.touch(path, :mtime => mtime)
+    end
+
     class Sass < self
       def package_file(file)
         contents = File.read(file)
