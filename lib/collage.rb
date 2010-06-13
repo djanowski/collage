@@ -100,7 +100,19 @@ class Collage
       def package_file(file)
         contents = File.read(file)
 
-        File.extname(file) == ".sass" ? ::Sass::Engine.new(contents).render : contents
+        contents = ::Sass::Engine.new(contents).render if File.extname(file) == ".sass"
+
+        inject_timestamps(contents)
+      end
+
+    protected
+      def inject_timestamps(css)
+        css.gsub(/(url\(\"?)(.+?)(\"?\))/) do
+          path = File.join(@path, $2)
+          stamp = "?#{File.mtime(File.join(@path, $2)).to_i}" if File.exist?(path)
+
+          "#{$1}#{$2}#{stamp}#{$3}"
+        end
       end
     end
   end

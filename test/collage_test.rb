@@ -125,6 +125,16 @@ class SassPackagerTest < Test::Unit::TestCase
     assert_equal "body {\n  font-size: 1em; }\n\n\n", output
   end
 
+  def test_appends_timestamp_to_images
+    (class << File; self; end).send(:alias_method, :mtime, :original_mtime)
+
+    output = Collage::Packager::Sass.new(PATH, ["backgrounds.sass"]).package
+
+    stamp = File.mtime(File.join(PATH, "collage.png")).to_i
+
+    assert_equal "body {\n  font-size: 1em;\n  background: url(/collage.png?#{stamp}) no-repeat left top; }\n\nheader {\n  background: url(\"/collage.png?#{stamp}\") no-repeat right bottom; }\n\nfooter {\n  background: url(http://example.org/foo.png) repeat-x; }\n\n\n", output
+  end
+
   def test_allows_css_too
     output = Collage::Packager::Sass.new(PATH, ["one.sass", "two.css"]).package
 
