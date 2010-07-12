@@ -6,9 +6,11 @@ require "override"
 
 require "sass"
 
-require File.dirname(__FILE__) + "/../lib/collage"
-
 include Override
+
+$VERBOSE = true
+
+require File.expand_path("../lib/collage", File.dirname(__FILE__))
 
 (class << File; self; end).send(:alias_method, :original_mtime, :mtime)
 
@@ -92,6 +94,32 @@ class MiddlewareTest < Test::Unit::TestCase
   end
 end
 
+class PackagerTest < Test::Unit::TestCase
+  def setup
+    @path = File.join(PATH, "all.js")
+
+    FileUtils.rm_f(@path)
+  end
+
+  def test_minification
+    collage = Collage::Packager.new(PATH, ["function.js"])
+
+    normal = collage.to_s
+    minified = collage.minify
+
+    assert minified.size > 0
+    assert minified.size < normal.size
+  end
+
+  def test_write_minified
+    collage = Collage::Packager.new(PATH, ["function.js"])
+
+    collage.write(@path, true)
+
+    assert File.read(@path) == collage.minify
+  end
+end
+
 class SassPackagerTest < Test::Unit::TestCase
   def setup
     @path = File.join(PATH, "all.css")
@@ -139,5 +167,15 @@ class SassPackagerTest < Test::Unit::TestCase
     output = Collage::Packager::Sass.new(PATH, ["one.sass", "two.css"]).package
 
     assert_equal "body {\n  font-size: 1em; }\n\n\n/* Two */\n\n\n", output
+  end
+
+  def test_minification
+    collage = Collage::Packager::Sass.new(PATH, ["one.sass"])
+
+    normal = collage.to_s
+    minified = collage.minify
+
+    assert minified.size > 0
+    assert minified.size < normal.size
   end
 end

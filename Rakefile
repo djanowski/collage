@@ -2,7 +2,6 @@ require "rubygems"
 require "rake"
 require "rake/gempackagetask"
 require "rake/clean"
-require "rake/testtask"
 
 gem_spec_file = "collage.gemspec"
 
@@ -10,9 +9,8 @@ gem_spec = eval(File.read(gem_spec_file)) rescue nil
 
 task :default => :test
 
-Rake::TestTask.new(:test) do |t|
-  t.pattern = "test/**/*_test.rb"
-  t.verbose = true
+task :test do
+  Dir["test/**/*_test.rb"].each { |file| load file }
 end
 
 Rake::GemPackageTask.new(gem_spec) do |pkg|

@@ -82,18 +82,42 @@ class Collage
       result.to_s
     end
 
+    def inspect
+      "#<Collage::Packager (#{size} files)>"
+    end
+
     def ignore(file)
       if files.delete(file)
         @result = nil
       end
     end
 
-    def write(path)
+    def write(path, minify = false)
+      contents = minify ? self.minify : result
+
       File.open(path, "w") do |f|
-        f.write(result.to_s)
+        f.write(contents.to_s)
       end
 
       FileUtils.touch(path, :mtime => mtime)
+    end
+
+    COMPRESSOR = File.expand_path("../vendor/yuicompressor-2.4.2.jar", File.dirname(__FILE__))
+
+    def minify
+      minified = IO.popen("java -jar #{COMPRESSOR} --type #{type}", "r+") do |io|
+        io.write(result.to_s)
+        io.close_write
+        io.read
+      end
+
+      $?.success? or raise RuntimeError.new("Error minifying #{files.inspect}.")
+
+      minified
+    end
+
+    def type
+      :js
     end
 
     class Sass < self
@@ -103,6 +127,10 @@ class Collage
         contents = ::Sass::Engine.new(contents).render if File.extname(file) == ".sass"
 
         inject_timestamps(contents)
+      end
+
+      def type
+        :css
       end
 
     protected
