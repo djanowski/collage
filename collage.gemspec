@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
 
   s.specification_version = 2 if s.respond_to? :specification_version=
 
-  s.files = ["lib/collage.rb", "README.html", "README.markdown", "LICENSE", "Rakefile", "example/config.ru", "example/public", "example/public/app.js", "example/public/jquery.js", "example/public/js.js"]
+  s.files = ["lib/collage.rb", "README.html", "README.markdown", "Rakefile", "vendor/yuicompressor-2.4.2.jar", "example/config.ru", "example/public", "example/public/app.js", "example/public/jquery.js", "example/public/js.js"]
 
   s.require_paths = ['lib']
 
