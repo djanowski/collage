@@ -153,6 +153,12 @@ class SassPackagerTest < Test::Unit::TestCase
     assert_equal "body {\n  font-size: 1em; }\n\n\n", output
   end
 
+  def test_packages_scss
+    output = Collage::Packager::Sass.new(PATH, ["one.scss"]).package
+
+    assert_equal "header {\n  margin: 10px; }\n\n\n", output
+  end
+
   def test_appends_timestamp_to_images
     (class << File; self; end).send(:alias_method, :mtime, :original_mtime)
 

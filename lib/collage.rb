@@ -122,9 +122,7 @@ class Collage
 
     class Sass < self
       def package_file(file)
-        contents = File.read(file)
-
-        contents = ::Sass::Engine.new(contents).render if File.extname(file) == ".sass"
+        contents = render(file)
 
         inject_timestamps(contents)
       end
@@ -141,6 +139,19 @@ class Collage
 
           "#{$1}#{$2}#{stamp}#{$3}"
         end
+      end
+
+      def render(file)
+        contents = File.read(file)
+
+        extension = File.extname(file)[1..-1]
+
+        case extension
+          when "sass", "scss"
+            contents = ::Sass::Engine.new(contents, syntax: extension.to_sym).render
+        end
+
+        contents
       end
     end
   end
