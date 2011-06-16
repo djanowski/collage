@@ -54,7 +54,7 @@ class Collage
 
     def files
       @files ||= @patterns.map do |pattern|
-        File.exist?(pattern) ? pattern : Dir[File.join(@path, pattern)]
+        File.exist?(pattern) ? pattern : Dir[File.join(@path, pattern)].sort
       end.flatten.uniq
     end
 
